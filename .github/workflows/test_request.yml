@@ -1,34 +1,56 @@
-name: Functional Test Message Sender (Fast)
+name: Integrated Functional Test
 
 on:
   workflow_dispatch:
 
 jobs:
-  send_messages:
+  test_sequence:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        session_id: [1, 2, 3, 4, 5, 6, 7, 8]
+        # session_key 1から11まで
+        sid: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
       fail-fast: false
+      max-parallel: 11 # 11個同時に走らせてIP分散を狙う
 
     steps:
-      - name: Send Messages
+      - name: Execute Sequence
         run: |
-          for i in {1..30}
+          # 共通の設定
+          USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          COOKIE="session_key=${{ matrix.sid }}"
+          
+          # 1. 入村 (POST)
+          RAND_NAME=$((RANDOM % 9999))
+          echo "Session ${{ matrix.sid }}: Joining room as 感染$RAND_NAME"
+          curl -s -X POST "https://zinro.net/m/room_in.php" \
+            -H "User-Agent: $USER_AGENT" \
+            -b "$COOKIE" \
+            -d "mode=submit" \
+            -d "player_name=感染$RAND_NAME" \
+            -d "room_name=SONSON"
+            -d "rom=1"
+            -d "pass=合言葉"
+          
+          sleep 0.5
+
+          # 2. メッセージ送信 (GET) × 2回
+          for i in {1..5}
           do
-            RANDOM_VAL=$((RANDOM % 101))
-            
-            echo "Attempt $i for Session ${{ matrix.session_id }}: Value $RANDOM_VAL"
-            
-            curl -G "https://zinro.net/m/player.php" \
+            RAND_MSG=$((RANDOM % 101))
+            echo "Session ${{ matrix.sid }}: Sending message $RAND_MSG"
+            curl -s -G "https://zinro.net/m/player.php" \
+              -H "User-Agent: $USER_AGENT" \
+              -b "$COOKIE" \
               --data-urlencode "mode=message" \
               --data-urlencode "to_user=ALL" \
-              --data-urlencode "message=ああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ$RANDOM_VAL" \
-              --cookie "session_key=${{ matrix.session_id }}" \
-              -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            
-            if [ $i -lt 2 ]; then
-              # 0.011秒待機
-              sleep 0.1
-            fi
+              --data-urlencode "message=あああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ$RAND_MSG"
+            sleep 0.1
           done
+
+          # 3. 終了処理 (GET)
+          echo "Session ${{ matrix.sid }}: Sending end signal"
+          curl -s -G "https://zinro.net/m/player.php" \
+            -H "User-Agent: $USER_AGENT" \
+            -b "$COOKIE" \
+            --data-urlencode "mode=end"
