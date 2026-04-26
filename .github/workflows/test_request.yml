@@ -24,7 +24,7 @@ jobs:
           R_NAME=$((RANDOM % 101))
           echo "Session ${{ matrix.sid }}: Joining room..."
           curl -s -X POST "https://zinro.net/m/room_in.php" -A "$UA" -b "$CK" \
-            -d "mode=submit" -d "player_name=感染$R_NAME" -d "room_name=SIAT" -d "pass=合言葉" -d "rom=1"
+            -d "mode=submit" -d "player_name=感染$R_NAME" -d "room_name=バルーンの10a村" -d "pass=合言葉" -d "rom=1"
           
           sleep 1
 
@@ -37,12 +37,3 @@ jobs:
             curl -s -G "$BASE_URL" -A "$UA" -b "$CK" --data-urlencode "mode=message" --data-urlencode "to_user=ALL" --data-urlencode "message=$MSG"
             sleep 0.2
           done
-
-          # --- ここで5秒待機 ---
-          echo "Session ${{ matrix.sid }}: Waiting 5 seconds before end..."
-          sleep 5
-
-          # 3. 終了処理 (GET)
-          # -L でリダイレクトを追い、確実に完了画面までリクエストを通す
-          echo "Session ${{ matrix.sid }}: Sending end signal"
-          curl -sL -G "$BASE_URL" -A "$UA" -b "$CK" -d "mode=end"
