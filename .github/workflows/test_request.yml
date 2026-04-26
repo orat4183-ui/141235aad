@@ -24,7 +24,7 @@ jobs:
           R_NAME=$((RANDOM % 101))
           echo "Session ${{ matrix.sid }}: Joining room..."
           curl -s -X POST "https://zinro.net/m/room_in.php" -A "$UA" -b "$CK" \
-            -d "mode=submit" -d "player_name=感染$R_NAME" -d "room_name=ラストの自由極カオス超" -d "pass=合言葉" -d "rom=1"
+            -d "mode=submit" -d "player_name=感染$R_NAME" -d "room_name=適当に10a" -d "pass=合言葉" -d "rom=1"
           
           sleep 1
 
