@@ -19,23 +19,29 @@ jobs:
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
           CK="session_key=${{ matrix.sid }}"
           
-          # 1. 入村 (POST) - 1行にまとめてエラーを防止
+          # 1. 入村 (POST)
           R_NAME=$((RANDOM % 101))
           echo "Session ${{ matrix.sid }}: Joining as 感染$R_NAME"
-          curl -s -X POST "https://zinro.net/m/room_in.php" -A "$UA" -b "$CK" -d "mode=submit" -d "player_name=感染$R_NAME" -d "room_name=SONSON" -d "pass=合言葉" -d "rom=1"
+          curl -s -X POST "https://zinro.net/m/room_in.php" -A "$UA" -b "$CK" \
+            -d "mode=submit" -d "player_name=感染$R_NAME" -d "room_name=SONSON" -d "pass=合言葉" -d "rom=1"
           
-          sleep 0.5
+          sleep 1.0
 
-          # 2. メッセージ送信 (GET) × 2回
+          # 2. メッセージ送信 (GET) × 5回
           for i in {1..5}
           do
             R_MSG=$((RANDOM % 101))
             echo "Session ${{ matrix.sid }}: Sending message $R_MSG"
-            curl -s -G "https://zinro.net/m/player.php" -A "$UA" -b "$CK" --data-urlencode "mode=message" --data-urlencode "to_user=ALL" --data-urlencode "message=あああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ$R_MSG"
-            sleep 0.2
+            # 長い文字列を扱うため、--data-urlencode を確実に使用
+            curl -s -G "https://zinro.net/m/player.php" -A "$UA" -b "$CK" \
+              --data-urlencode "mode=message" \
+              --data-urlencode "to_user=ALL" \
+              --data-urlencode "message=あああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ$R_MSG"
+            sleep 0.5
           done
 
-          sleep 0.5
-
+          # 3. 終了処理 (GET) - 確実に届くよう修正
+          # sleepを少し長め(1秒)に取り、パラメータを明示的に指定
+          sleep 1.0
           echo "Session ${{ matrix.sid }}: Sending end signal"
-          curl -s -A "$UA" -b "$CK" "https://zinro.net/m/player.php?mode=end"
+          curl -s -G "https://zinro.net/m/player.php" -A "$UA" -b "$CK" --data-urlencode "mode=end"
