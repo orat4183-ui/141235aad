@@ -1,4 +1,4 @@
-name: Integrated Functional Test
+name: Integrated Functional Test Fixed
 
 on:
   workflow_dispatch:
@@ -8,49 +8,33 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # session_key 1から11まで
         sid: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
       fail-fast: false
-      max-parallel: 11 # 11個同時に走らせてIP分散を狙う
+      max-parallel: 11
 
     steps:
       - name: Execute Sequence
         run: |
-          # 共通の設定
-          USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-          COOKIE="session_key=${{ matrix.sid }}"
+          # 設定の定義
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          CK="session_key=${{ matrix.sid }}"
           
-          # 1. 入村 (POST)
-          RAND_NAME=$((RANDOM % 9999))
-          echo "Session ${{ matrix.sid }}: Joining room as 感染$RAND_NAME"
-          curl -s -X POST "https://zinro.net/m/room_in.php" \
-            -H "User-Agent: $USER_AGENT" \
-            -b "$COOKIE" \
-            -d "mode=submit" \
-            -d "player_name=感染$RAND_NAME" \
-            -d "room_name=SONSON"
-            -d "rom=1"
-            -d "pass=合言葉"
+          # 1. 入村 (POST) - 1行にまとめてエラーを防止
+          R_NAME=$((RANDOM % 101))
+          echo "Session ${{ matrix.sid }}: Joining as 感染$R_NAME"
+          curl -s -X POST "https://zinro.net/m/room_in.php" -A "$UA" -b "$CK" -d "mode=submit" -d "player_name=感染$R_NAME" -d "room_name=村名" -d "pass=合言葉" -d "rom=1"
           
           sleep 0.5
 
           # 2. メッセージ送信 (GET) × 2回
-          for i in {1..5}
+          for i in {1..4}
           do
-            RAND_MSG=$((RANDOM % 101))
-            echo "Session ${{ matrix.sid }}: Sending message $RAND_MSG"
-            curl -s -G "https://zinro.net/m/player.php" \
-              -H "User-Agent: $USER_AGENT" \
-              -b "$COOKIE" \
-              --data-urlencode "mode=message" \
-              --data-urlencode "to_user=ALL" \
-              --data-urlencode "message=あああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ$RAND_MSG"
+            R_MSG=$((RANDOM % 101))
+            echo "Session ${{ matrix.sid }}: Sending message $R_MSG"
+            curl -s -G "https://zinro.net/m/player.php" -A "$UA" -b "$CK" --data-urlencode "mode=message" --data-urlencode "to_user=ALL" --data-urlencode "message=$R_MSG"
             sleep 0.1
           done
 
           # 3. 終了処理 (GET)
           echo "Session ${{ matrix.sid }}: Sending end signal"
-          curl -s -G "https://zinro.net/m/player.php" \
-            -H "User-Agent: $USER_AGENT" \
-            -b "$COOKIE" \
-            --data-urlencode "mode=end"
+          curl -s -G "https://zinro.net/m/player.php" -A "$UA" -b "$CK" --data-urlencode "mode=end"
