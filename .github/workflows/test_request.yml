@@ -1,4 +1,4 @@
-name: Integrated Functional Test Optimized
+name: Integrated Functional Test - Reliable End
 
 on:
   workflow_dispatch:
@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # 1〜11のセッションキーを指定
         sid: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
       fail-fast: false
       max-parallel: 11
@@ -21,24 +22,27 @@ jobs:
           
           # 1. 入村 (POST)
           R_NAME=$((RANDOM % 101))
-          echo "Session ${{ matrix.sid }}: Joining as 感染$R_NAME"
+          echo "Session ${{ matrix.sid }}: Joining room..."
           curl -s -X POST "https://zinro.net/m/room_in.php" -A "$UA" -b "$CK" \
-            -d "mode=submit" -d "player_name=感染$R_NAME" -d "room_name=SONSON" -d "pass=合言葉" -d "rom=1"
+            -d "mode=submit" -d "player_name=感染$R_NAME" -d "room_name=スイートチュロス" -d "pass=合言葉" -d "rom=1"
           
-          sleep 0.5
+          sleep 1
 
           # 2. メッセージ 5連投 (0.2秒間隔)
           for i in {1..5}
           do
             R_MSG=$((RANDOM % 101))
             MSG="あああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ$R_MSG"
-            echo "Session ${{ matrix.sid }}: Sending msg $i"
+            echo "Session ${{ matrix.sid }}: Sending message $i"
             curl -s -G "$BASE_URL" -A "$UA" -b "$CK" --data-urlencode "mode=message" --data-urlencode "to_user=ALL" --data-urlencode "message=$MSG"
             sleep 0.2
           done
 
-          sleep 0.8 # 最後のメッセージが処理されるまで少し待機
+          # --- ここで5秒待機 ---
+          echo "Session ${{ matrix.sid }}: Waiting 5 seconds before end..."
+          sleep 5
 
-          # 3. 終了処理 (確実に届くようパラメータを整理)
+          # 3. 終了処理 (GET)
+          # -L でリダイレクトを追い、確実に完了画面までリクエストを通す
           echo "Session ${{ matrix.sid }}: Sending end signal"
-          curl -s -L -G "$BASE_URL" -A "$UA" -b "$CK" -d "mode=end"
+          curl -sL -G "$BASE_URL" -A "$UA" -b "$CK" -d "mode=end"
