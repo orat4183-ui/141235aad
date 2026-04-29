@@ -1,14 +1,16 @@
 name: Test
 on: workflow_dispatch
 jobs:
-  run:
+  post:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          for i in {1..25}; do
-            curl -s "https://zinro.net/m/room_in.php" \
-              -b "session_key=$i" \
-              -d "mode=submit&room_name=村名&rom=1&speed=1" \
-              --data-urlencode "player_name=感染$(tr -dc A-Z < /dev/urandom | head -c 6)"
+          for s in $(seq 1 25); do
+            NAME="感染$(tr -dc A-Za-z </dev/urandom | head -c 6)"
+            curl -s -b "session_key=$s" "https://zinro.net/m/room_list.php" > /dev/null
             sleep 0.1
+            curl -s -X POST "https://zinro.net/m/room_in.php" \
+              -b "session_key=$s" \
+              -d "mode=submit&player_name=$NAME&room_name=村名&rom=1&speed=1&trip_open=1"
+            echo "Session $s sent."
           done
