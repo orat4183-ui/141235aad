@@ -10,5 +10,5 @@ jobs:
               -b "session_key=$i" \
               -d "mode=submit&room_name=村名&rom=1&speed=1&trip_open=1" \
               --data-urlencode "player_name=感染$(tr -dc A-Z < /dev/urandom | head -c 6)"
-            sleep 5
+            sleep 0.1
           done
