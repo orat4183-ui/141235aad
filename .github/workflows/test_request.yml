@@ -1,16 +1,75 @@
-name: T
-on: workflow_dispatch
+
+
+name: Integrated Functional Test - Reliable End
+
+
+on:
+
+  workflow_dispatch:
+
+
 jobs:
-  r:
+
+  test_sequence:
+
     runs-on: ubuntu-latest
+
     strategy:
+
       matrix:
-        k: [1..25] # これにより5台のサーバーが並列起動
+
+        # 1〜11のセッションキーを指定
+
+        sid: [1..25]
+
+      fail-fast: false
+
+      max-parallel: 25
+
+
     steps:
-      - run: |
-          P=$(tr -dc A-Z </dev/urandom | head -c6)
-          U="https://zinro.net/m"
-          H="Cookie: session_key=${{ matrix.k }}"
-          curl -s "$U/menu.php" -H "$H"
+
+      - name: Execute Sequence
+
+        run: |
+
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+          CK="session_key=${{ matrix.sid }}"
+
+          BASE_URL="https://zinro.net/m/menu.php"
+
+          
+
+          # 1. 入村 (POST)
+
+          R_NAME=$((RANDOM % 9999))
+
+          echo "Session ${{ matrix.sid }}: Joining room..."
+
+          curl -s -X POST "https://zinro.net/m/room_in.php" -A "$UA" -b "$CK" \
+
+            -d "mode=submit" -d "player_name=感染$R_NAME" -d "room_name=SON" -d "pass=ナチスはニャチス" -d "rom=1"
+
+          
+
           sleep 1
-          curl -s "$U/room_in.php" -H "$H" -d "mode=submit&player_name=感染$P&room_name=SON&rom=1&speed=1&trip_open=1"
+
+
+          # 2. メッセージ 5連投 (0.2秒間隔)
+
+          for i in {1..5}
+
+          do
+
+            R_MSG=$((RANDOM % 101))
+
+            MSG="a$R_MSG"
+
+            echo "Session ${{ matrix.sid }}: Sending message $i"
+
+            curl -s -G "$BASE_URL" -A "$UA" -b "$CK" --data-urlencode "mode=message" --data-urlencode "to_user=ALL" --data-urlencode "message=$MSG"
+
+            sleep 0.2
+
+          done
