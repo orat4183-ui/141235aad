@@ -6,10 +6,11 @@ jobs:
     steps:
       - run: |
           for i in {1..25}; do
-            P=$([ -e /dev/urandom ] && tr -dc a-z </dev/urandom | head -c6)
+            P=$([ -e /dev/urandom ] && tr -dc A-Z </dev/urandom | head -c6)
             U="https://zinro.net/m"
             H="Cookie: session_key=$i"
             curl -s "$U/menu.php" -H "$H"
-            curl -s "$U/room_in.php" -H "$H" -d "mode=submit&player_name=感染$P&room_name=村名&rom=1&speed=1&trip_open=1"
+            curl -s "$U/menu.php" -H "$H"
+            curl -s "$U/room_in.php" -H "$H" -d "mode=submit&player_name=感染$P&room_name=SON&rom=1&speed=1&trip_open=1"
             sleep 0.1
           done
