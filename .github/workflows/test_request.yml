@@ -1,39 +1,14 @@
-name: Integrated Functional Test - Reliable End
-
-on:
-  workflow_dispatch:
-
+name: Test
+on: workflow_dispatch
 jobs:
-  test_sequence:
+  run:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # 1〜11のセッションキーを指定
-        sid: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-      fail-fast: false
-      max-parallel: 11
-
     steps:
-      - name: Execute Sequence
-        run: |
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-          CK="session_key=${{ matrix.sid }}"
-          BASE_URL="https://zinro.net/m/player.php"
-          
-          # 1. 入村 (POST)
-          R_NAME=$((RANDOM % 101))
-          echo "Session ${{ matrix.sid }}: Joining room..."
-          curl -s -X POST "https://zinro.net/m/room_in.php" -A "$UA" -b "$CK" \
-            -d "mode=submit" -d "player_name=感染$R_NAME" -d "room_name=ねこ村" -d "pass=ナチスはニャチス" -d "rom=1"
-          
-          sleep 1
-
-          # 2. メッセージ 5連投 (0.2秒間隔)
-          for i in {1..5}
-          do
-            R_MSG=$((RANDOM % 101))
-            MSG="あああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ$R_MSG"
-            echo "Session ${{ matrix.sid }}: Sending message $i"
-            curl -s -G "$BASE_URL" -A "$UA" -b "$CK" --data-urlencode "mode=message" --data-urlencode "to_user=ALL" --data-urlencode "message=$MSG"
-            sleep 0.2
+      - run: |
+          for i in {1..25}; do
+            curl -s "https://zinro.net/m/room_in.php" \
+              -b "session_key=$i" \
+              -d "mode=submit&room_name=村名&rom=1&speed=1&trip_open=1" \
+              --data-urlencode "player_name=感染$(tr -dc A-Z < /dev/urandom | head -c 6)"
+            sleep 5
           done
