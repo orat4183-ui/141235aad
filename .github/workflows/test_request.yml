@@ -41,9 +41,9 @@ jobs:
           async function main() {
             for (let i = 1; i <= 50; i++) {
               await sendMessage(i);
-              if (i < 50) {
+              if (i < 500) {
                 console.log('5秒待機中...');
-                await new Promise(resolve => setTimeout(resolve, 10));
+                await new Promise(resolve => setTimeout(resolve, 30));
               }
             }
             console.log('すべての送信が完了しました。');
