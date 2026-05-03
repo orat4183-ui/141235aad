@@ -19,7 +19,7 @@ jobs:
             const url = \`https://zinro.net/m/player.php?mode=message&to_user=%E4%BA%BA%E7%8B%BC&message=\${randomNumber}\`;
             
             const options = {
-              headers: { 'Cookie': 'session_key=4' }
+              headers: { 'Cookie': 'session_key=2' }
             };
 
             return new Promise((resolve) => {
