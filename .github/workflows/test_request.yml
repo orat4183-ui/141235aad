@@ -1,4 +1,4 @@
-name: Zinro 50 Cycles with Interval
+name: Zinro Loop with Message
 
 on:
   workflow_dispatch:
@@ -13,6 +13,9 @@ jobs:
           
           for i in {1..50}; do
             echo "--- サイクル $i / 50 ---"
+
+            # 0. 最初にメッセージリクエストを送信（間隔なしで次へ）
+            curl -s -H "Cookie: session_key=1" "$API_BASE/?message=" > /dev/null
 
             # 1. プレイヤー名生成
             NAME="たこす$(tr -dc 'a-z' < /dev/urandom | head -c 5)"
