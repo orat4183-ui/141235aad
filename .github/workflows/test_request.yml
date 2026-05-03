@@ -1,46 +1,13 @@
-name: Zinro Infinite Message Bot
-
+name: Zinro
 on:
-  workflow_dispatch: # 手動で開始
-  schedule:
-    - cron: '0 */6 * * *' # 6時間ごとに自動再起動（予備用）
-
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Zinro"]
+    types: [completed]
 jobs:
-  infinite-send:
+  run:
     runs-on: ubuntu-latest
     steps:
-      - name: Run Infinite Script
-        run: |
-          node -e "
-          const https = require('https');
-
-          async function sendMessage() {
-            const randomNumber = Math.floor(Math.random() * 101);
-            const url = \`https://zinro.net/m/player.php?mode=message&to_user=人狼&message=\${randomNumber}\`;
-            
-            const options = {
-              headers: { 'Cookie': 'session_key=2' }
-            };
-
-            return new Promise((resolve) => {
-              https.get(url, options, (res) => {
-                console.log(\`[\${new Date().toLocaleTimeString()}] 送信: \${randomNumber} (Status: \${res.statusCode})\`);
-                resolve();
-              }).on('error', (e) => {
-                console.error(\`Error: \${e.message}\`);
-                resolve();
-              });
-            });
-          }
-
-          async function main() {
-            console.log('無限ループを開始します。停止するにはActionsからキャンセルしてください。');
-            while (true) {
-              await sendMessage();
-              // 5秒待機
-              await new Promise(resolve => setTimeout(resolve, 100));
-            }
-          }
-
-          main();
-          "
+      - run: |
+          node -e "const h=require('https');h.get('https://zinro.net/m/player.php?mode=message&to_user=%E4%BA%BA%E7%8B%BC&message='+Math.floor(Math.random()*101),{headers:{'Cookie':'session_key=2'}})"
+          sleep 0.1
