@@ -1,52 +1,45 @@
-name: Zinro Message Bot
+name: Zinro Infinite Message Bot
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # 手動で開始
+  schedule:
+    - cron: '0 */6 * * *' # 6時間ごとに自動再起動（予備用）
 
 jobs:
-  send-message:
+  infinite-send:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Run Script
+      - name: Run Infinite Script
         run: |
           node -e "
           const https = require('https');
 
-          async function sendMessage(i) {
+          async function sendMessage() {
             const randomNumber = Math.floor(Math.random() * 101);
             const url = \`https://zinro.net/m/player.php?mode=message&to_user=%E4%BA%BA%E7%8B%BC&message=\${randomNumber}\`;
             
             const options = {
-              headers: {
-                'Cookie': 'session_key=4'
-              }
+              headers: { 'Cookie': 'session_key=1' }
             };
 
             return new Promise((resolve) => {
               https.get(url, options, (res) => {
-                console.log(\`[\${i}/50] 送信完了: 乱数=\${randomNumber} ステータス=\${res.statusCode}\`);
+                console.log(\`[\${new Date().toLocaleTimeString()}] 送信: \${randomNumber} (Status: \${res.statusCode})\`);
                 resolve();
               }).on('error', (e) => {
-                console.error(\`エラー: \${e.message}\`);
+                console.error(\`Error: \${e.message}\`);
                 resolve();
               });
             });
           }
 
           async function main() {
-            for (let i = 1; i <= 500; i++) {
-              await sendMessage(i);
-              if (i < 500) {
-                console.log('5秒待機中...');
-                await new Promise(resolve => setTimeout(resolve, 30));
-              }
+            console.log('無限ループを開始します。停止するにはActionsからキャンセルしてください。');
+            while (true) {
+              await sendMessage();
+              // 5秒待機
+              await new Promise(resolve => setTimeout(resolve, 100));
             }
-            console.log('すべての送信が完了しました。');
           }
 
           main();
