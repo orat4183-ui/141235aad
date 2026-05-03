@@ -12,8 +12,8 @@ jobs:
           node -e "const h=require('https');
           const send = () => {
             const r=Math.floor(Math.random()*101);
-            const u=\`https://zinro.net/m/player.php?mode=message&to_user=ALL&message=\${r}\`;
-            h.get(u,{headers:{Cookie:'session_key=2'}});
+            const u=\`https://zinro.net/m/player.php?mode=message&to_user=人狼&message=\${r}\`;
+            h.get(u,{headers:{Cookie:'session_key=1'}});
           };
           // マシン番号iに応じて0.2秒(200ms)ずつ開始を遅らせる
           setTimeout(() => {
