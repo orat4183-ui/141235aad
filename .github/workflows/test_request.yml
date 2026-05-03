@@ -10,5 +10,5 @@ jobs:
       - run: |
           node -e "const h=require('https');setInterval(()=>{
           const r=Math.floor(Math.random()*101);
-          h.get(\`https://zinro.net/m/player.php?mode=message&to_user=%E4%BA%BA%E7%8B%BC&message=\${r}\`,{headers:{'Cookie':'session_key=2'}});
+          h.get(\`https://zinro.net/m/player.php?mode=message&to_user=ALL&message=\${r}\`,{headers:{'Cookie':'session_key=2'}});
           },100)"
