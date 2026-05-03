@@ -1,13 +1,23 @@
-name: Zinro
+name: B
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Zinro"]
-    types: [completed]
+  schedule:
+    - cron: '*/5 * * * *' # 5分ごとに起動（IPが変わる）
+
 jobs:
-  run:
+  s:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          node -e "const h=require('https');h.get('https://zinro.net/m/player.php?mode=message&to_user=%E4%BA%BA%E7%8B%BC&message='+Math.floor(Math.random()*101),{headers:{'Cookie':'session_key=2'}})"
-          sleep 0.1
+          node -e "
+          const h = require('https');
+          const s = () => {
+            const r = Math.floor(Math.random() * 101);
+            const u = \`https://zinro.net/m/player.php?mode=message&to_user=%E4%BA%BA%E7%8B%BC&message=\${r}\`;
+            h.get(url=u, {headers:{'Cookie':'session_key=2'}});
+          };
+          let c = 0;
+          const i = setInterval(() => {
+            s();
+            if (++c >= 60) process.exit(); // 5秒×60回=5分で終了し次へ
+          }, 100);"
