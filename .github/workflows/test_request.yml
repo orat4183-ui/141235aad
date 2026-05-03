@@ -1,54 +1,55 @@
-name: Integrated Functional Test - Reliable End
+name: Zinro Room Automation
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # 手動実行用
 
 jobs:
-  test_sequence:
+  automation:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      max-parallel: 25
-      matrix:
-        # GitHub Actionsでは[1..25]とは書けないため、数値を列挙します
-        sid: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
-
     steps:
-      - name: Execute Sequence
+      - name: Start Automation Loop
         run: |
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-          CK="session_key=${{ matrix.sid }}"
-          BASE_URL="https://zinro.net/m/menu.php"
-          
-          # 1. 入村 (POST)
-          R_NAME=$((RANDOM % 9999))
-          echo "Session ${{ matrix.sid }}: Joining room..."
-          
-          curl -s -X POST "https://zinro.net/m/room_in.php" \
-            -A "$UA" \
-            -b "$CK" \
-            -d "mode=submit" \
-            -d "player_name=感染$R_NAME" \
-            -d "room_name=SON" \
-            -d "pass=ナチスはニャチス" \
-            -d "rom=1"
-          
-          sleep 1
+          # 無限ループ（GitHub Actionsのタイムアウト制限まで実行）
+          while true; do
+            echo "--- サイクル開始 ---"
 
-          # 2. メッセージ 5連投 (0.2秒間隔)
-          for i in {1..5}
-          do
-            R_MSG=$((RANDOM % 101))
-            MSG="a$R_MSG"
-            echo "Session ${{ matrix.sid }}: Sending message $i ($MSG)"
+            # 1. ランダムなアルファベット5文字を生成
+            RANDOM_STR=$(tr -dc 'a-zA-Z' < /dev/urandom | head -c 5)
+            PLAYER_NAME="たこす${RANDOM_STR}"
+            echo "生成されたプレイヤー名: $PLAYER_NAME"
 
-            curl -s -G "$BASE_URL" \
-              -A "$UA" \
-              -b "$CK" \
-              --data-urlencode "mode=message" \
-              --data-urlencode "to_user=ALL" \
-              --data-urlencode "message=$MSG"
+            # 2. session_key=2 で入室リクエスト (POST)
+            echo "入室リクエストを送信中..."
+            curl -s -X POST "https://zinro.net/m/room_in.php" \
+              -H "Cookie: session_key=2" \
+              -d "mode=submit" \
+              -d "player_name=${PLAYER_NAME}" \
+              -d "room_name=af" \
+              -d "rom=1" \
+              -d "speed=1" \
+              -d "trip_open=1" > /dev/null
+
+            echo "10秒待機中..."
+            sleep 0.1
+
+            # 3. session_key=1 でプレイヤー一覧(API)にアクセスしIDを特定
+            echo "プレイヤー一覧を取得中..."
+            RESPONSE=$(curl -s -H "Cookie: session_key=1" "https://zinro.net/m/api/?mode=players")
             
-            # 短すぎるsleepはサーバー側で拒絶される可能性があるため注意
-            sleep 0.2
+            # JSONから「たこす」を含むプレイヤーのIDを抽出
+            # ※ .players の中を走査して name に「たこす」が含まれるものの id を取得
+            TARGET_ID=$(echo $RESPONSE | jq -r ".players[] | select(.name | contains(\"たこす\")) | .id" | head -n 1)
+
+            if [ -z "$TARGET_ID" ] || [ "$TARGET_ID" == "null" ]; then
+              echo "対象のプレイヤーIDが見つかりませんでした。スキップします。"
+            else
+              echo "ターゲットID: $TARGET_ID を発見しました。"
+              
+
+              # 4. session_key=1 でキックを実行
+              echo "ID: $TARGET_ID をキックします..."
+              curl -s -H "Cookie: session_key=1" "https://zinro.net/m/player.php?kick=${TARGET_ID}" > /dev/null
+            fi
+
+            echo "50秒待機して次のサイクルへ移行します..."
           done
