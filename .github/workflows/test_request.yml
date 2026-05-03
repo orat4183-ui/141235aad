@@ -1,44 +1,53 @@
-name: Zinro Loop with Message
+name: Zinro Message Bot
 
 on:
   workflow_dispatch:
 
 jobs:
-  automation:
+  send-message:
     runs-on: ubuntu-latest
     steps:
-      - name: Run 50 Cycles
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Run Script
         run: |
-          API_BASE="https://zinro.net/m"
-          
-          for i in {1..50}; do
-            echo "--- サイクル $i / 50 ---"
+          node -e "
+          const https = require('https');
 
-            # 0. 最初にメッセージリクエストを送信（間隔なしで次へ）
-            curl -s -H "Cookie: session_key=1" "$API_BASE/?message=" > /dev/null
-
-            # 1. プレイヤー名生成
-            NAME="たこす$(tr -dc 'a-z' < /dev/urandom | head -c 5)"
-
-            # 2. 入室 (session_key=2)
-            curl -s -X POST "$API_BASE/room_in.php" -H "Cookie: session_key=2" \
-              -d "mode=submit&player_name=$NAME&room_name=af&rom=1&speed=1&trip_open=1" > /dev/null
+          async function sendMessage(i) {
+            const randomNumber = Math.floor(Math.random() * 101);
+            const url = \`https://zinro.net/m/player.php?mode=message&to_user=%E4%BA%BA%E7%8B%BC&message=\${randomNumber}\`;
             
-            sleep 2
+            const options = {
+              headers: {
+                'Cookie': 'session_key=4'
+              }
+            };
 
-            # 3. ID取得 (session_key=1)
-            ID=$(curl -s -H "Cookie: session_key=1" "$API_BASE/api/?mode=players" | \
-                 jq -r ".players[] | select(.name | contains(\"たこす\")) | .id" | head -n 1)
-            
-            sleep 2
+            return new Promise((resolve) => {
+              https.get(url, options, (res) => {
+                console.log(\`[\${i}/50] 送信完了: 乱数=\${randomNumber} ステータス=\${res.statusCode}\`);
+                resolve();
+              }).on('error', (e) => {
+                console.error(\`エラー: \${e.message}\`);
+                resolve();
+              });
+            });
+          }
 
-            # 4. IDが存在すればキック (session_key=1)
-            if [ -n "$ID" ] && [ "$ID" != "null" ]; then
-              echo "Kicking: $NAME (ID: $ID)"
-              curl -s -H "Cookie: session_key=1" "$API_BASE/player.php?kick=$ID" > /dev/null
-            fi
+          async function main() {
+            for (let i = 1; i <= 50; i++) {
+              await sendMessage(i);
+              if (i < 50) {
+                console.log('5秒待機中...');
+                await new Promise(resolve => setTimeout(resolve, 10));
+              }
+            }
+            console.log('すべての送信が完了しました。');
+          }
 
-            sleep 2
-          done
-          
-          echo "全工程が完了しました。"
+          main();
+          "
