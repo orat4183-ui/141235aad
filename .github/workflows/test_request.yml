@@ -1,14 +1,13 @@
-name: F
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'
+name: B
+on: workflow_dispatch
 jobs:
-  b:
+  m:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        i: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
     steps:
       - run: |
-          node -e "const h=require('https');setInterval(()=>{
+          node -e "const h=require('https');
           const r=Math.floor(Math.random()*101);
-          h.get(\`https://zinro.net/m/player.php?mode=message&to_user=ALL&message=\${r}\`,{headers:{'Cookie':'session_key=2'}});
-          },100)"
+          h.get(\`https://zinro.net/m/player.php?mode=message&to_user=ALL&message=\${r}\`,{headers:{Cookie:'session_key=2'}})"
