@@ -1,55 +1,38 @@
-name: Zinro Room Automation
+name: Zinro Loop
 
 on:
-  workflow_dispatch: # 手動実行用
+  workflow_dispatch:
 
 jobs:
   automation:
     runs-on: ubuntu-latest
     steps:
-      - name: Start Automation Loop
+      - name: Run Loop
         run: |
-          # 無限ループ（GitHub Actionsのタイムアウト制限まで実行）
+          API_BASE="https://zinro.net/m"
+          
           while true; do
-            echo "--- サイクル開始 ---"
+            # 1. プレイヤー名生成
+            NAME="たこす$(tr -dc 'a-z' < /dev/urandom | head -c 5)"
+            echo "Target: $NAME"
 
-            # 1. ランダムなアルファベット5文字を生成
-            RANDOM_STR=$(tr -dc 'a-zA-Z' < /dev/urandom | head -c 5)
-            PLAYER_NAME="たこす${RANDOM_STR}"
-            echo "生成されたプレイヤー名: $PLAYER_NAME"
-
-            # 2. session_key=2 で入室リクエスト (POST)
-            echo "入室リクエストを送信中..."
-            curl -s -X POST "https://zinro.net/m/room_in.php" \
-              -H "Cookie: session_key=2" \
-              -d "mode=submit" \
-              -d "player_name=${PLAYER_NAME}" \
-              -d "room_name=af" \
-              -d "rom=1" \
-              -d "speed=1" \
-              -d "trip_open=1" > /dev/null
-
-            echo "10秒待機中..."
-            sleep 0.1
-
-            # 3. session_key=1 でプレイヤー一覧(API)にアクセスしIDを特定
-            echo "プレイヤー一覧を取得中..."
-            RESPONSE=$(curl -s -H "Cookie: session_key=1" "https://zinro.net/m/api/?mode=players")
+            # 2. 入室 (session_key=2)
+            curl -s -X POST "$API_BASE/room_in.php" -H "Cookie: session_key=2" \
+              -d "mode=submit&player_name=$NAME&room_name=af&rom=1&speed=1&trip_open=1" > /dev/null
             
-            # JSONから「たこす」を含むプレイヤーのIDを抽出
-            # ※ .players の中を走査して name に「たこす」が含まれるものの id を取得
-            TARGET_ID=$(echo $RESPONSE | jq -r ".players[] | select(.name | contains(\"たこす\")) | .id" | head -n 1)
+            sleep 0.01
 
-            if [ -z "$TARGET_ID" ] || [ "$TARGET_ID" == "null" ]; then
-              echo "対象のプレイヤーIDが見つかりませんでした。スキップします。"
-            else
-              echo "ターゲットID: $TARGET_ID を発見しました。"
-              
+            # 3. ID取得 (session_key=1)
+            ID=$(curl -s -H "Cookie: session_key=1" "$API_BASE/api/?mode=players" | \
+                 jq -r '.players[] | select(.name | contains("たこす")) | .id' | head -n 1)
 
-              # 4. session_key=1 でキックを実行
-              echo "ID: $TARGET_ID をキックします..."
-              curl -s -H "Cookie: session_key=1" "https://zinro.net/m/player.php?kick=${TARGET_ID}" > /dev/null
+            # 4. IDが存在すればキック (session_key=1)
+            if [ -n "$ID" ] && [ "$ID" != "null" ]; then
+              echo "Kicking ID: $ID"
+              sleep 0.01
+              curl -s -H "Cookie: session_key=1" "$API_BASE/player.php?kick=$ID" > /dev/null
             fi
 
-            echo "50秒待機して次のサイクルへ移行します..."
+            echo "Wait 50s..."
+            sleep 0.01
           done
