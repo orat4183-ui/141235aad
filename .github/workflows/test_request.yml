@@ -39,7 +39,7 @@ jobs:
           }
 
           async function main() {
-            for (let i = 1; i <= 50; i++) {
+            for (let i = 1; i <= 500; i++) {
               await sendMessage(i);
               if (i < 500) {
                 console.log('5秒待機中...');
