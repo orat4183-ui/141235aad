@@ -1,4 +1,4 @@
-name: Zinro Loop
+name: Zinro 50 Cycles
 
 on:
   workflow_dispatch:
@@ -7,32 +7,30 @@ jobs:
   automation:
     runs-on: ubuntu-latest
     steps:
-      - name: Run Loop
+      - name: Run 50 Cycles
         run: |
           API_BASE="https://zinro.net/m"
           
-          while true; do
+          # 1から50までカウント
+          for i in {1..50}; do
+            echo "--- サイクル $i / 50 ---"
+
             # 1. プレイヤー名生成
             NAME="たこす$(tr -dc 'a-z' < /dev/urandom | head -c 5)"
-            echo "Target: $NAME"
 
             # 2. 入室 (session_key=2)
             curl -s -X POST "$API_BASE/room_in.php" -H "Cookie: session_key=2" \
               -d "mode=submit&player_name=$NAME&room_name=af&rom=1&speed=1&trip_open=1" > /dev/null
-            
-            sleep 0.01
 
             # 3. ID取得 (session_key=1)
             ID=$(curl -s -H "Cookie: session_key=1" "$API_BASE/api/?mode=players" | \
-                 jq -r '.players[] | select(.name | contains("たこす")) | .id' | head -n 1)
+                 jq -r ".players[] | select(.name | contains(\"たこす\")) | .id" | head -n 1)
 
             # 4. IDが存在すればキック (session_key=1)
             if [ -n "$ID" ] && [ "$ID" != "null" ]; then
-              echo "Kicking ID: $ID"
-              sleep 0.01
+              echo "Kicking Target: $NAME (ID: $ID)"
               curl -s -H "Cookie: session_key=1" "$API_BASE/player.php?kick=$ID" > /dev/null
             fi
-
-            echo "Wait 50s..."
-            sleep 0.01
           done
+          
+          echo "全50サイクルの実行が完了しました。"
