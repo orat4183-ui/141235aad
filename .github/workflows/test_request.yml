@@ -1,23 +1,51 @@
-name: P
-on: workflow_dispatch
+name: Request Switcher
+
+on:
+  workflow_dispatch: # GitHubのタブから手動で実行できるようにする
+
 jobs:
-  b:
-    strategy:
-      matrix:
-        # 10台のマシンを定義
-        i: [0,1,2,3,4,5,6,7,8,9]
+  run-requests:
     runs-on: ubuntu-latest
+    
+    # 自由に変更できる設定値
+    env:
+      INTERVAL_SECONDS: 2   # 交互に送る際の間隔（秒）
+      REPEAT_COUNT: 5       # 繰り返す回数（セット数）
+      ROOM_ID: "2237694"
+      ACTOR_ID: "17607182"
+      SESSION_KEY: "2"
+
     steps:
-      - run: |
-          node -e "const h=require('https');
-          const send = () => {
-            const r=Math.floor(Math.random()*101);
-            const u=\`https://zinro.net/m/player.php?mode=message&to_user=人狼&message=\${r}\`;
-            h.get(u,{headers:{Cookie:'session_key=1'}});
-          };
-          // マシン番号iに応じて0.2秒(200ms)ずつ開始を遅らせる
-          setTimeout(() => {
-            // 2秒(2000ms)おきに実行
-            setInterval(send, 2000);
-            send();
-          }, ${{ matrix.i }} * 200);"
+      - name: Send alternating POST requests
+        run: |
+          URL="https://zinro.net/m/player.php"
+          
+          echo "=== 処理を開始します (全 ${{ env.REPEAT_COUNT }} 回 / 間隔 ${{ env.INTERVAL_SECONDS }} 秒) ==="
+          
+          for ((i=1; i<=${{ env.REPEAT_COUNT }}; i++)); do
+            echo "--- 実行回数: $i / ${{ env.REPEAT_COUNT }} ---"
+            
+            # 1. play の送信
+            echo "Sending 'play' request..."
+            curl -s -X POST "$URL" \
+              -b "session_key=${{ env.SESSION_KEY }}" \
+              -d "mode=switch_participation&room_id=${{ env.ROOM_ID }}&actor_id=${{ env.ACTOR_ID }}&participation=play"
+            echo ""
+            
+            # 指定秒数待機
+            sleep ${{ env.INTERVAL_SECONDS }}
+            
+            # 2. watch の送信
+            echo "Sending 'watch' request..."
+            curl -s -X POST "$URL" \
+              -b "session_key=${{ env.SESSION_KEY }}" \
+              -d "mode=switch_participation&room_id=${{ env.ROOM_ID }}&actor_id=${{ env.ACTOR_ID }}&participation=watch"
+            echo ""
+            
+            # 最後の回でなければ待機する
+            if [ $i -lt ${{ env.REPEAT_COUNT }} ]; then
+              sleep ${{ env.INTERVAL_SECONDS }}
+            fi
+          done
+          
+          echo "=== すべての処理が完了しました ==="
