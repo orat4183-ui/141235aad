@@ -11,9 +11,9 @@ jobs:
     env:
       INTERVAL_SECONDS: 2   # 交互に送る際の間隔（秒）
       REPEAT_COUNT: 5       # 繰り返す回数（セット数）
-      ROOM_ID: "2237694"
-      ACTOR_ID: "17607182"
-      SESSION_KEY: "2"
+      ROOM_ID: "2237769"
+      ACTOR_ID: "17607248"
+      SESSION_KEY: "1"
 
     steps:
       - name: Send alternating POST requests
