@@ -9,7 +9,7 @@ jobs:
     
     # 自由に変更できる設定値
     env:
-      INTERVAL_SECONDS: 0   # 交互に送る際の間隔（秒）
+      INTERVAL_SECONDS: 1   # 交互に送る際の間隔（秒）
       REPEAT_COUNT: 5       # 繰り返す回数（セット数）
       ROOM_ID: "2237769"
       ACTOR_ID: "17607248"
